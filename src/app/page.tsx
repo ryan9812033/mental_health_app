@@ -261,5 +261,4 @@ function AuthScreen({ onLogin }) {
 
 export default App;
 
-Force redeploy for Vercel
 

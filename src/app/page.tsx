@@ -1,4 +1,5 @@
-// MAIN APP WRAPPER WITH SIMPLE AUTH + FULL PROTOTYPE
+'use client';
+
 import { useState } from "react";
 import {
   LineChart,
@@ -10,7 +11,7 @@ import {
   Legend,
 } from "recharts";
 
-export default function App() {
+function App() {
   const [user, setUser] = useState(null);
   const [goal, setGoal] = useState("");
   const [habits, setHabits] = useState([
@@ -23,14 +24,21 @@ export default function App() {
   const [dailyFeeling, setDailyFeeling] = useState(50);
   const [period, setPeriod] = useState("7d");
   const [logs, setLogs] = useState([]);
-  const filteredLogs = period === "all" ? logs : logs.slice(-1 * (period === "30d" ? 30 : 7));
+  const filteredLogs =
+    period === "all" ? logs : logs.slice(-1 * (period === "30d" ? 30 : 7));
 
   const totalWeight = habits.reduce((sum, h) => sum + h.weight, 0);
 
   const logToday = () => {
-    const score = habits.reduce((sum, h) => sum + (Math.min(h.value, 100) / 100) * h.weight, 0);
+    const score = habits.reduce(
+      (sum, h) => sum + (Math.min(h.value, 100) / 100) * h.weight,
+      0
+    );
     const logEntry = {
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      date: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
       habit: Math.round(score),
       feeling: dailyFeeling,
     };
@@ -44,7 +52,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-6 space-y-6 max-w-md mx-auto text-neutral-800 font-sans">
-      <div className="text-right text-sm text-gray-400">Logged in as {user.email}</div>
+      <div className="text-right text-sm text-gray-400">
+        Logged in as {user.email}
+      </div>
 
       <section className="bg-white p-6 rounded-2xl shadow-md space-y-3">
         <h2 className="text-xl font-semibold">What’s driving you right now?</h2>
@@ -58,7 +68,9 @@ export default function App() {
       </section>
 
       <section className="bg-white p-6 rounded-2xl shadow-md space-y-4">
-        <h2 className="text-xl font-semibold">Habits You Chose to Support Your Vision</h2>
+        <h2 className="text-xl font-semibold">
+          Habits You Chose to Support Your Vision
+        </h2>
         {habits.map((habit, index) => (
           <div key={index} className="space-y-1">
             <div className="flex justify-between items-center">
@@ -95,10 +107,14 @@ export default function App() {
           </div>
         ))}
         {totalWeight !== 100 && (
-          <p className="text-red-500 text-sm">⚠️ Your weights must add up to 100%. Currently: {totalWeight}%</p>
+          <p className="text-red-500 text-sm">
+            ⚠️ Your weights must add up to 100%. Currently: {totalWeight}%
+          </p>
         )}
         <button
-          onClick={() => setHabits([...habits, { name: "New Habit", weight: 0, value: 0 }])}
+          onClick={() =>
+            setHabits([...habits, { name: "New Habit", weight: 0, value: 0 }])
+          }
           className="w-full p-2 border border-sky-400 text-sky-600 rounded-xl hover:bg-sky-50"
         >
           + Add Habit
@@ -175,20 +191,32 @@ export default function App() {
               <YAxis domain={[0, 100]} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="habit" stroke="#3b82f6" name="Habit Score" />
-              <Line type="monotone" dataKey="feeling" stroke="#10b981" name="Feeling Score" />
+              <Line
+                type="monotone"
+                dataKey="habit"
+                stroke="#3b82f6"
+                name="Habit Score"
+              />
+              <Line
+                type="monotone"
+                dataKey="feeling"
+                stroke="#10b981"
+                name="Feeling Score"
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-sm text-gray-400">No data logged yet. Your chart will appear here after saving your first log.</p>
+          <p className="text-sm text-gray-400">
+            No data logged yet. Your chart will appear here after saving your
+            first log.
+          </p>
         )}
       </section>
     </div>
   );
 }
 
-// AuthScreen component (for simple email input login with aesthetic design)
-export function AuthScreen({ onLogin }) {
+function AuthScreen({ onLogin }) {
   const [email, setEmail] = useState("");
 
   const handleLogin = () => {
@@ -201,8 +229,12 @@ export function AuthScreen({ onLogin }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-white font-sans">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm space-y-6">
-        <h2 className="text-3xl font-semibold text-center text-gray-800">Welcome Back</h2>
-        <p className="text-sm text-gray-500 text-center">Please enter your email to continue</p>
+        <h2 className="text-3xl font-semibold text-center text-gray-800">
+          Welcome Back
+        </h2>
+        <p className="text-sm text-gray-500 text-center">
+          Please enter your email to continue
+        </p>
         <input
           type="email"
           className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -216,8 +248,12 @@ export function AuthScreen({ onLogin }) {
         >
           Continue
         </button>
-        <p className="text-xs text-gray-400 text-center">We’ll never share your email with anyone else.</p>
+        <p className="text-xs text-gray-400 text-center">
+          We’ll never share your email with anyone else.
+        </p>
       </div>
     </div>
   );
 }
+
+export default App;

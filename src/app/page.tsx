@@ -1,3 +1,6 @@
+// Redeploy trigger
+
+
 'use client';
 
 import { useState } from "react";
@@ -257,3 +260,6 @@ function AuthScreen({ onLogin }) {
 }
 
 export default App;
+
+Force redeploy for Vercel
+

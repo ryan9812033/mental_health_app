@@ -1,103 +1,223 @@
-import Image from "next/image";
+// MAIN APP WRAPPER WITH SIMPLE AUTH + FULL PROTOTYPE
+import { useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-export default function Home() {
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [goal, setGoal] = useState("");
+  const [habits, setHabits] = useState([
+    { name: "Sleep 8 hours", weight: 30, value: 0 },
+    { name: "Drink 2L water", weight: 30, value: 0 },
+    { name: "Walk 10K steps", weight: 40, value: 0 },
+  ]);
+  const [habitScore, setHabitScore] = useState(72);
+  const [feelingScore, setFeelingScore] = useState(68);
+  const [dailyFeeling, setDailyFeeling] = useState(50);
+  const [period, setPeriod] = useState("7d");
+  const [logs, setLogs] = useState([]);
+  const filteredLogs = period === "all" ? logs : logs.slice(-1 * (period === "30d" ? 30 : 7));
+
+  const totalWeight = habits.reduce((sum, h) => sum + h.weight, 0);
+
+  const logToday = () => {
+    const score = habits.reduce((sum, h) => sum + (Math.min(h.value, 100) / 100) * h.weight, 0);
+    const logEntry = {
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      habit: Math.round(score),
+      feeling: dailyFeeling,
+    };
+    setLogs((prev) => [...prev.slice(-6), logEntry]); // keep last 7 days
+    setHabitScore(Math.round(score));
+    setFeelingScore(dailyFeeling);
+    alert("Today's log saved!");
+  };
+
+  if (!user) return <AuthScreen onLogin={setUser} />;
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-6 space-y-6 max-w-md mx-auto text-neutral-800 font-sans">
+      <div className="text-right text-sm text-gray-400">Logged in as {user.email}</div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      <section className="bg-white p-6 rounded-2xl shadow-md space-y-3">
+        <h2 className="text-xl font-semibold">What’s driving you right now?</h2>
+        <input
+          type="text"
+          placeholder="e.g. Be more confident, fitter..."
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+          className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400"
+        />
+      </section>
+
+      <section className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+        <h2 className="text-xl font-semibold">Habits You Chose to Support Your Vision</h2>
+        {habits.map((habit, index) => (
+          <div key={index} className="space-y-1">
+            <div className="flex justify-between items-center">
+              <input
+                type="text"
+                value={habit.name}
+                onChange={(e) => {
+                  const updated = [...habits];
+                  updated[index].name = e.target.value;
+                  setHabits(updated);
+                }}
+                className="flex-1 mr-2 p-2 border border-gray-300 rounded-lg"
+              />
+              <button
+                onClick={() => setHabits(habits.filter((_, i) => i !== index))}
+                className="text-sm text-red-500 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span>Importance</span>
+              <input
+                type="number"
+                value={habit.weight}
+                onChange={(e) => {
+                  const updated = [...habits];
+                  updated[index].weight = parseInt(e.target.value) || 0;
+                  setHabits(updated);
+                }}
+                className="w-16 p-1 border rounded text-center"
+              />
+            </div>
+          </div>
+        ))}
+        {totalWeight !== 100 && (
+          <p className="text-red-500 text-sm">⚠️ Your weights must add up to 100%. Currently: {totalWeight}%</p>
+        )}
+        <button
+          onClick={() => setHabits([...habits, { name: "New Habit", weight: 0, value: 0 }])}
+          className="w-full p-2 border border-sky-400 text-sky-600 rounded-xl hover:bg-sky-50"
+        >
+          + Add Habit
+        </button>
+      </section>
+
+      <section className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+        <h2 className="text-xl font-semibold">Log Today's Progress</h2>
+        {habits.map((habit, index) => (
+          <div key={index} className="space-y-1">
+            <label className="text-sm font-medium">{habit.name}</label>
+            <input
+              type="range"
+              value={habit.value}
+              max={100}
+              step={1}
+              onChange={(e) => {
+                const updated = [...habits];
+                updated[index].value = parseInt(e.target.value);
+                setHabits(updated);
+              }}
+              className="w-full"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <p className="text-xs text-gray-500">{habit.value}% of goal</p>
+          </div>
+        ))}
+        <div className="space-y-1 mt-4">
+          <label className="text-sm font-medium">How do you feel today?</label>
+          <input
+            type="range"
+            value={dailyFeeling}
+            max={100}
+            step={1}
+            onChange={(e) => setDailyFeeling(parseInt(e.target.value))}
+            className="w-full"
+          />
+          <p className="text-xs text-gray-500">{dailyFeeling}/100</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={logToday}
+          className="w-full p-3 bg-sky-600 text-white rounded-xl font-medium shadow hover:bg-sky-700 transition"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Save Log
+        </button>
+      </section>
+
+      <section className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+        <h2 className="text-xl font-semibold">Your Progress</h2>
+        <div className="text-right">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-400"
+          >
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div className="flex justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Habit Score</p>
+            <p className="text-lg font-semibold">{habitScore}%</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Feeling Score</p>
+            <p className="text-lg font-semibold">{feelingScore}%</p>
+          </div>
+        </div>
+        {logs.length > 0 ? (
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={filteredLogs}>
+              <XAxis dataKey="date" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="habit" stroke="#3b82f6" name="Habit Score" />
+              <Line type="monotone" dataKey="feeling" stroke="#10b981" name="Feeling Score" />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-sm text-gray-400">No data logged yet. Your chart will appear here after saving your first log.</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// AuthScreen component (for simple email input login with aesthetic design)
+export function AuthScreen({ onLogin }) {
+  const [email, setEmail] = useState("");
+
+  const handleLogin = () => {
+    if (email.trim()) {
+      const user = { email };
+      onLogin(user);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-white font-sans">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm space-y-6">
+        <h2 className="text-3xl font-semibold text-center text-gray-800">Welcome Back</h2>
+        <p className="text-sm text-gray-500 text-center">Please enter your email to continue</p>
+        <input
+          type="email"
+          className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button
+          onClick={handleLogin}
+          className="w-full p-3 bg-sky-600 text-white rounded-xl font-medium shadow hover:bg-sky-700 transition"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Continue
+        </button>
+        <p className="text-xs text-gray-400 text-center">We’ll never share your email with anyone else.</p>
+      </div>
     </div>
   );
 }
